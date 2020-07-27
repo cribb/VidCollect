@@ -1,5 +1,5 @@
-function ba_livehist(obj,event,hImage)
-% BA_LIVEHIST is a callback function for ba_impreview.
+function vid_livehist_new(obj,event,hImage)
+% VID_LIVEHIST_NEW creates the preview window interface
 %
 
 persistent q
