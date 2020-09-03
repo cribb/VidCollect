@@ -1,30 +1,17 @@
-function vid_collect(filename, exptime, Nsec)
-% Prior to starting experiment, make sure the magnet is centered.  Lower
-% the magnet to 0 and use the vertical micrometer to ensure the tips of the
-% magnet will touch the top of a glass slide (to apply maximum force to
-% bead).  Click on the apps tab and open image acquisition.  Use the
-% horizontal micrometers to line up the magnet gap with the field of view.
-% If done correctly, you will not see the tips of the magnets show up.  You
-% may have to adjust the focus and increase the gain to see the gap with
-% fluorescence.  Close image acquisition, then run the first two sections
-% of this script.  Raise the motor back to 12mm by clicking the height box
-% in the gui and typing the desired height.  Carefully place the sample
-% under the magnet, making sure the magnet will not contact and edge of the
-% chamber when it is lowered.  Close the gui, then reopen image acqusition.
-% Find a region that has 20-40 beads.  Beads within a diameter from
-% each other or an edge will probably not work well when tracking. Focus the region, then
-% close image acquisition again.  Run the script.
+function vid_collect(filename, Video, Nsec)
+
 
 if nargin < 1 || isempty(filename)
     error('Need filename.');
 end
 
-if nargin < 2 || isempty(exptime)
-    exptime = 8; % [ms]
+if nargin < 2 || isempty(Video)
+    logentry('No Camera configured. Configuring for Grasshopper3');
+    Video = vid_config('Grasshopper3'); % [ms]
 end
 
 if nargin < 3 || isempty(Nsec)
-    Nsec = 60; % [ms]
+    Nsec = 10; % [ms]
 end
 
 
@@ -33,44 +20,27 @@ framenumber{1,1} = [];
 TotalFrames = 0;
 
 
-Fps = 1 / (exptime/1000);
+Fps = 1 / (Video.ExposureTime/1000);
 NFrames = ceil(Fps * Nsec);
-% NFrames = 7625;
 
+[cam, src] = flir_camera_open(Video);
 
-imaqmex('feature', '-previewFullBitDepth', true);
-vid = videoinput('pointgrey', 1,'F7_Raw16_1024x768_Mode2');
-vid.ReturnedColorspace = 'grayscale';
-triggerconfig(vid, 'manual');
-vid.FramesPerTrigger = NFrames;
+triggerconfig(cam, 'manual');
+cam.FramesPerTrigger = NFrames;
 
-% Following code found in apps -> image acquisition
-% More info here: http://www.mathworks.com/help/imaq/basic-image-acquisition-procedure.html
-src = getselectedsource(vid); 
-src.ExposureMode = 'off'; 
-src.FrameRateMode = 'off';
-src.ShutterMode = 'manual';
-src.Gain = 10;
-src.Gamma = 1.15;
-src.Brightness = 5.8594;
-src.Shutter = exptime;
+imagetype = ['uint', num2str(Video.Depth)];
 
-vidRes = vid.VideoResolution;
-imagetype = 'uint16';
+filename = [filename, '_', num2str(Video.Width), 'x', ...
+                           num2str(Video.Height), 'x', ...
+                           num2str(NFrames), '_' imagetype];
 
-imageRes = fliplr(vidRes);
-
-filename = [filename, '_', num2str(vidRes(1)), 'x', ...
-                           num2str(vidRes(2)), 'x', ...
-                           num2str(NFrames), '_uint16'];
-
-f = figure;%('Visible', 'off');
-pImage = imshow(uint16(zeros(imageRes)));
+f = figure; %('Visible', 'off');
+pImage = imshow(uint16(zeros(Video.Height, Video.Width)));
 
 
 axis image
 setappdata(pImage, 'UpdatePreviewWindowFcn', @vid_view)
-p = preview(vid, pImage);
+p = preview(cam, pImage);
 set(p, 'CDataMapping', 'scaled');
 
 
@@ -80,15 +50,15 @@ set(p, 'CDataMapping', 'scaled');
 
 pause(2);
 logentry('Starting video...');
-start(vid);
+start(cam);
 pause(2);
 
 NFramesAvailable = 0;
 
 binfilename = [filename,'.bin'];
 if ~isempty(dir(binfilename))
-    delete(vid);
-    clear vid
+    delete(cam);
+    clear cam
     close(f)
     error('That file already exists. Change the filename and try again.');
 end
@@ -97,7 +67,7 @@ fid = fopen(binfilename, 'w');
 
 logentry('Triggering video collection...');
 cnt = 0;
-trigger(vid);
+trigger(cam);
 
 % start timer for video timestamps
 t1=tic; 
@@ -105,16 +75,16 @@ t1=tic;
 % Check and store the motor position every 100 ms until it reaches zero. 
 pause(4/Fps);
 NFramesTaken = 0;
-% while(vid.FramesAvailable > 0)
+% while(cam.FramesAvailable > 0)
 while(NFramesTaken < NFrames)
     cnt = cnt + 1;
     
     
-    NFramesAvailable(cnt,1) = vid.FramesAvailable;
+    NFramesAvailable(cnt,1) = cam.FramesAvailable;
     NFramesTaken = NFramesTaken + NFramesAvailable(cnt,1);
 %     disp(['Num Grabbed Frames: ' num2str(NFramesAvailable(cnt,1)) '/' num2str(NFramesTaken)]);
 
-    [data, ~, meta] = getdata(vid, NFramesAvailable(cnt,1));    
+    [data, ~, meta] = getdata(cam, NFramesAvailable(cnt,1));    
     
     if isempty(data)
         continue
@@ -123,8 +93,15 @@ while(NFramesTaken < NFrames)
     abstime{cnt,1} = vertcat(meta(:).AbsTime);
     framenumber{cnt,1} = meta(:).FrameNumber;
 
-    [rows, cols, rgb, frames] = size(data);
-
+%     [rows, cols, rgb, frames] = size(data);
+% 
+%     numdata = double(squeeze(data));
+% 
+%     squashedstack = reshape(numdata,[],frames);
+%     meanval{cnt,1} = transpose(mean(squashedstack));
+%     stdval{cnt,1}  = transpose(std(squashedstack));
+%     maxval{cnt,1}  = transpose(max(squashedstack));
+%     minval{cnt,1}  = transpose(min(squashedstack));
     
     if cnt == 1
         firstframe = data(:,:,1);
@@ -143,7 +120,7 @@ lastframe = data(:,:,1,end);
 elapsed_time = toc(t1);
 
 logentry('Stopping video collection...');
-stop(vid);
+stop(cam);
 pause(1);
     
 % Close the video .bin file
@@ -165,8 +142,8 @@ Time = vertcat(Time{:});
 % Min = vertcat(minval{:});
 
 
-delete(vid);
-clear vid
+delete(cam);
+clear cam
 
 close(f);
 logentry('Done!');
@@ -183,7 +160,7 @@ function logentry(txt)
                    num2str(logtime(4),        '%02i') ':' ...
                    num2str(logtime(5),        '%02i') ':' ...
                    num2str(floor(logtime(6)), '%02i') ') '];
-     headertext = [logtimetext 'ba_pulloff: '];
+     headertext = [logtimetext 'vid_collect: '];
      
      fprintf('%s%s\n', headertext, txt);
      

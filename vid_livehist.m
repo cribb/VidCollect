@@ -1,4 +1,4 @@
-function ba_livehist(obj,event,hImage)
+function vid_livehist_new(obj,event,hImage)
 % BA_LIVEHIST is a callback function for ba_impreview.
 %
 
@@ -13,8 +13,6 @@ set(hImage, 'CData', im);
 
 zhand = hImage.UserData{1};
 focusTF = hImage.UserData{2};
-
-
 
 % Select the second subplot on the figure for the histogram.
 ax = subplot(2,1,2);
@@ -36,8 +34,9 @@ maxD = num2str(maxD, '%u');
 minD = num2str(minD, '%u');
 
 
+% assignin('base', 'focus_measure', q);
 
-assignin('base', 'focus_measure', q);
+% disp(['event.data.class = ' class(event.Data)]);
 
 % Plot the histogram. Choose less bins for faster update of the display.
 switch class(event.Data)
@@ -45,8 +44,8 @@ switch class(event.Data)
         xlim([0 260]);        
         imhist(event.Data, 128);
     case 'uint16'        
-        imhist(event.Data, 32768);        
         xlim([0 66000]);
+        imhist(event.Data, 32768);        
 end
 set(gca,'YScale','log')
 
@@ -68,12 +67,16 @@ end
 
 title([image_str, focus_str, zpos_str]);
 
-
 % Modify the following numbers to reflect the actual limits of the data returned by the camera.
 % For example the limit a 16-bit camera would be [0 65535].
 a = ancestor(hImage, 'axes');
 cmin = min(double(hImage.CData(:)));
 cmax = max(double(hImage.CData(:)));
+
+if cmin == cmax
+    cmin = cmax-1;
+end
+
 set(a, 'CLim', [uint16(cmin) uint16(cmax)]);
 
 % set(a, 'CLim', [0 65535]);
