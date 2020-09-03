@@ -4,7 +4,11 @@ function vid_livehist(obj,event,hImage)
 
 
 % Display the current image frame.
-set(hImage, 'CData', event.Data);
+try
+    set(hImage, 'CData', event.Data);
+catch
+    pause
+end
 
 % Select the second subplot on the figure for the histogram.
 ax = subplot(2,1,2);
@@ -40,6 +44,11 @@ a = ancestor(hImage, 'axes');
 
 cmin = min(double(hImage.CData(:)));
 cmax = max(double(hImage.CData(:)));
+
+if cmin == cmax
+    cmin = cmax-1;
+end
+
 set(a, 'CLim', [uint16(cmin) uint16(cmax)]);
 % set(a, 'CLim', [0 65535]);
 
