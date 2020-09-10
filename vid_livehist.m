@@ -1,4 +1,4 @@
-function vid_livehist_new(obj,event,hImage)
+function vid_livehist(obj,event,hImage)
 % BA_LIVEHIST is a callback function for ba_impreview.
 %
 
