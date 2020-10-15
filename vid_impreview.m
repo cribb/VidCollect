@@ -1,36 +1,26 @@
-function vid_impreview
+function vid_impreview(hwhandle, callback_function, focusTF)
 % BA_IMPREVIEW UI for previewing the microscope's camera image.
 %
     
-    imaqmex('feature', '-previewFullBitDepth', true);
-    
-    vid = videoinput('pointgrey', 2, 'F7_Raw16_1024x768_Mode2');
-    
-    vid.ReturnedColorspace = 'grayscale';
-    
-    src = getselectedsource(vid);
-    
-    src.Brightness = 5.8594;   
-    src.ExposureMode = 'off';    
-    src.GainMode = 'manual';
-    src.Gain       = 15;
-    src.GammaMode = 'manual';
-    src.Gamma      = 1.15;
-    src.FrameRateMode  = 'off';
-    src.ShutterMode = 'manual';
-    src.Shutter = 8;
+    Video = flir_config_video('Grasshopper3', 'F7_Raw8_1024x768_Mode2', ExposureTime);
+    [vid, src] = flir_camera_open(Video);
 
     pause(0.1);
     
-    vidRes = vid.VideoResolution;
-    imageRes = fliplr(vidRes);   
+    imageRes = fliplr(vid.Resolution);   
     
     f = figure('Visible', 'off', 'Units', 'normalized');
     ax = subplot(2, 1, 1);
     set(ax, 'Units', 'normalized');
     set(ax, 'Position', [0.05, 0.4515, .9, 0.53]); 
     
-    hImage = imshow(uint16(zeros(imageRes)));
+    switch Video.Depth
+        case 8
+            hImage = imshow(uint8(zeros(imageRes)));
+        case 16
+            hImage = imshow(uint16(zeros(imageRes)));
+    end
+    #hImage = imshow(uint16(zeros(imageRes)));
     axis image
 
     edit_exptime = uicontrol(f, 'Position', [20 20 60 20], ...
@@ -50,7 +40,7 @@ function vid_impreview
 %     btn_grabframe.Position
     
     
-    setappdata(hImage, 'UpdatePreviewWindowFcn', @vid_livehist);
+    setappdata(hImage, 'UpdatePreviewWindowFcn', callback_function);
     h = preview(vid, hImage);
     set(h, 'CDataMapping', 'scaled');
 
