@@ -4,7 +4,7 @@ function vid_impreview
     
     imaqmex('feature', '-previewFullBitDepth', true);
     
-    vid = videoinput('pointgrey', 2, 'F7_Raw16_1024x768_Mode2');
+    vid = videoinput('pointgrey', 1, 'F7_Mono8_1280x1024_Mode0');
     
     vid.ReturnedColorspace = 'grayscale';
     
@@ -53,7 +53,8 @@ function vid_impreview
     setappdata(hImage, 'UpdatePreviewWindowFcn', @vid_livehist);
     h = preview(vid, hImage);
     set(h, 'CDataMapping', 'scaled');
-
+    assignin('base', 'LiveImage', hImage);
+    
     function change_exptime(source,event)
 
         exptime = str2num(source.String);
