@@ -11,8 +11,11 @@ im = event.Data;
 set(hImage, 'CData', im);
 
 
-zhand = hImage.UserData{1};
-focusTF = hImage.UserData{2};
+% zhand = hImage.UserData{1};
+% focusTF = hImage.UserData{2};
+
+zhand = '';
+focusTF = '';
 
 % Select the second subplot on the figure for the histogram.
 ax = subplot(2,1,2);
