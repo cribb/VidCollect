@@ -30,11 +30,12 @@ function vid_impreview
                'Menubar', 'none', ...
                'NumberTitle','Off', ...
                'Name','vid_impreview');
-    f.Position(3:4) = [0.2682, 0.4759];
-
+    f.Position = [0.02, 0.075, 0.4286, 0.8731];
+%     f.Resize = 'off';
+    
     % Position: [from left, from bottom, width, height]    
     ax1 = axes(f, 'Units', 'normalized', ...
-                  'Position', [0, 0.23, 1, 0.8]); 
+                  'Position', [0, 0.25, 1, 0.8]); 
     
     hImage = imshow(uint16(zeros(imageRes)));
     ax1.Tag = 'Live Image';        
