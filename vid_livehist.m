@@ -2,25 +2,51 @@ function vid_livehist(obj,event,hImage)
 % BA_LIVEHIST is a callback function for ba_impreview.
 %
 
-persistent q
+% persistent ax1
 
-im = event.Data;
 % class(im)
 
 % Display the current image frame.
-set(hImage, 'CData', im);
+h = ancestor(hImage, 'figure');
+im = event.Data;
 
-
+hImage.CData = im;
 % zhand = hImage.UserData{1};
 % focusTF = hImage.UserData{2};
 
 zhand = '';
 focusTF = '';
 
+% Pull out min and max pixel intensities so we can scale the preview image
+cmin = min(double(hImage.CData(:)));
+cmax = max(double(hImage.CData(:)));
+
+% Handle the case when the camera image is totally washed out (zero diff
+% between pixel intensities makes the range zero).
+if cmin == cmax
+    cmin = cmax-1;
+end
+
+% Set configuration for histogram plot
+switch class(im)
+    case 'uint8'
+        histRange = [0 260];
+        Nbins = 128;
+    case 'uint16'        
+        histRange = [0 66000];
+        Nbins = 32768;
+end
+
+ax1 = ancestor(hImage, 'axes');
+% ax1.Units = 'normalized';
+% ax1.Position = [0.01, 0.45, 1, 0.6];
+
+
 % Select the second subplot on the figure for the histogram.
-ax = subplot(2,1,2);
-set(ax, 'Units', 'normalized');
-set(ax, 'Position', [0.28, 0.05, 0.4, 0.17]);
+f = ancestor(ax1, 'figure');
+ax2 = f.Children(end-1);
+% ax2.Units = 'normalized';
+% ax2.Position = [0.3, 0.05, 0.68, 0.2];
 
 
 D = double(im(:));
@@ -42,15 +68,11 @@ minD = num2str(minD, '%u');
 % disp(['event.data.class = ' class(event.Data)]);
 
 % Plot the histogram. Choose less bins for faster update of the display.
-switch class(event.Data)
-    case 'uint8'
-        xlim([0 260]);        
-        imhist(event.Data, 128);
-    case 'uint16'        
-        xlim([0 66000]);
-        imhist(event.Data, 32768);        
-end
-set(gca,'YScale','log')
+% axes(ax2);
+% xlim(histRange);        
+% imhist(im, Nbins);
+histogram(ax2, im(:), Nbins, 'DisplayStyle', 'stairs');
+ax2.YScale = 'log';
 
 image_str = [avgD, ' \pm ', stdD, ' [', minD ', ', maxD, ']'];
 
@@ -70,17 +92,9 @@ end
 
 title([image_str, focus_str, zpos_str]);
 
-% Modify the following numbers to reflect the actual limits of the data returned by the camera.
-% For example the limit a 16-bit camera would be [0 65535].
-a = ancestor(hImage, 'axes');
-cmin = min(double(hImage.CData(:)));
-cmax = max(double(hImage.CData(:)));
 
-if cmin == cmax
-    cmin = cmax-1;
-end
 
-set(a, 'CLim', [uint16(cmin) uint16(cmax)]);
+set(ax1, 'CLim', [uint16(cmin) uint16(cmax)]);
 
 % set(a, 'CLim', [0 65535]);
 

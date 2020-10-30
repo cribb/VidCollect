@@ -1,59 +1,81 @@
 function vid_impreview
-% BA_IMPREVIEW UI for previewing the microscope's camera image.
+% VID_IMPREVIEW UI for previewing the microscope's camera image.
 %
+    [~, ComputerName] = system('hostname');
+    ComputerName = strtrim(ComputerName);
     
-    imaqmex('feature', '-previewFullBitDepth', true);
+    switch upper(ComputerName)
+        case 'HILLVIDEOCOMP'
+            CameraName = 'Flea3';
+            CameraFormat = 'F7_Mono8_1280x1024_Mode0';
+            exptime = 8; % [ms]
+        case 'ZINC'
+            CameraName = 'Grasshopper3';
+            CameraFormat = '';
+            exptime = 16;
+    end
     
-    vid = videoinput('pointgrey', 1, 'F7_Mono8_1280x1024_Mode0');
     
-    vid.ReturnedColorspace = 'grayscale';
+    Video = flir_config_video(CameraName, CameraFormat, exptime);
+    [cam, src] = flir_camera_open(Video);
     
-    src = getselectedsource(vid);
-    
-    src.Brightness = 5.8594;   
-    src.ExposureMode = 'off';    
-    src.GainMode = 'manual';
-    src.Gain       = 15;
-    src.GammaMode = 'manual';
-    src.Gamma      = 1.15;
-    src.FrameRateMode  = 'off';
-    src.ShutterMode = 'manual';
-    src.Shutter = 8;
-
     pause(0.1);
     
-    vidRes = vid.VideoResolution;
+    vidRes = cam.VideoResolution;
     imageRes = fliplr(vidRes);   
     
-    f = figure('Visible', 'off', 'Units', 'normalized');
-    ax = subplot(2, 1, 1);
-    set(ax, 'Units', 'normalized');
-    set(ax, 'Position', [0.05, 0.4515, .9, 0.53]); 
+    f = figure('Visible', 'off', ...
+               'Units', 'normalized', ...
+               'Toolbar','none', ...
+               'Menubar', 'none', ...
+               'NumberTitle','Off', ...
+               'Name','vid_impreview');
+    f.Position(3:4) = [0.2682, 0.4759];
+
+    % Position: [from left, from bottom, width, height]    
+    ax1 = axes(f, 'Units', 'normalized', ...
+                  'Position', [0, 0.23, 1, 0.8]); 
     
     hImage = imshow(uint16(zeros(imageRes)));
+    ax1.Tag = 'Live Image';        
     axis image
-
-    edit_exptime = uicontrol(f, 'Position', [20 20 60 20], ...
+    
+   
+    ax2 = axes(f, 'Tag', 'Image Histogram', ...
+                  'Units', 'normalized', ...
+                  'Position', [0.3, 0.05, 0.68, 0.2]); 
+    
+    
+    txt_exptime = uicontrol(f, 'Units', 'pixels', ...
+                               'Position', [5 27 100 20], ...
+                               'Style', 'text', ...
+                               'HorizontalAlignment', 'left', ...
+                               'String', 'Exposure time [ms]:');
+        
+    edit_exptime = uicontrol(f, 'Units', 'pixels', ...
+                                'Position', [105 30 35 20], ...
                                 'Style', 'edit', ...
                                 'String', num2str(src.Shutter), ...
                                 'Callback', @change_exptime);
-    edit_framename = uicontrol(f, 'Position', [20 40 120 20], ...
-                                'Style', 'edit', ...
-                                'String', 'grabframe', ...
-                                'Callback', @change_framefilename);
-                            
-    btn_grabframe = uicontrol(f, 'Position', [20 60 60 20], ...
+
+    btn_grabframe = uicontrol(f, 'Units', 'pixels', ...
+                                 'Position', [5 5 40 20], ...
                                  'Style', 'pushbutton', ...
-                                 'String', 'Grab Frame', ...
+                                 'String', 'Grab', ...
                                  'Callback', @grab_frame);
-%     edit_exptime.Position
-%     btn_grabframe.Position
+
+    edit_framename = uicontrol(f, 'Units', 'pixels', ...
+                                  'Position', [48 5 93 20], ...
+                                  'Style', 'edit', ...
+                                  'String', 'filename', ...
+                                  'Callback', @change_framefilename);
+                            
     
     
     setappdata(hImage, 'UpdatePreviewWindowFcn', @vid_livehist);
-    h = preview(vid, hImage);
+    h = preview(cam, hImage);
     set(h, 'CDataMapping', 'scaled');
-    assignin('base', 'LiveImage', hImage);
+    
     
     function change_exptime(source,event)
 
