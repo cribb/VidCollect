@@ -1,4 +1,4 @@
-function vid_impreview
+function varargout = vid_impreview
 % VID_IMPREVIEW UI for previewing the microscope's camera image.
 %
     [~, ComputerName] = system('hostname');
@@ -77,7 +77,10 @@ function vid_impreview
     h = preview(cam, hImage);
     set(h, 'CDataMapping', 'scaled');
     
-    
+   if nargout > 0
+       varargout{1} = f;
+   end
+   
     function change_exptime(source,event)
 
         exptime = str2num(source.String);
