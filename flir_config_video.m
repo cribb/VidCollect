@@ -1,4 +1,4 @@
-function Video = vid_config(CameraName, CameraFormat, exptime)
+function Video = flir_config_video(CameraName, CameraFormat, exptime)
 % VID_CONFIG configures the camera
 %
 %{
