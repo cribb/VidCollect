@@ -1,13 +1,13 @@
-function vid_impreview(hwhandle, callback_function, focusTF)
+function vid_impreview(hwhandle, viewOps, callback_function)
 % BA_IMPREVIEW UI for previewing the microscope's camera image.
 %
-    
-    Video = flir_config_video('Grasshopper3', 'F7_Raw8_1024x768_Mode2', ExposureTime);
+
+    Video = flir_config_video('Grasshopper3', 'F7_Raw8_1024x768_Mode2', viewOps.exptime);
     [vid, src] = flir_camera_open(Video);
 
     pause(0.1);
     
-    imageRes = fliplr(vid.Resolution);   
+    imageRes = fliplr(vid.VideoResolution);   
     
     f = figure('Visible', 'off', 'Units', 'normalized');
     ax = subplot(2, 1, 1);
@@ -20,7 +20,9 @@ function vid_impreview(hwhandle, callback_function, focusTF)
         case 16
             hImage = imshow(uint16(zeros(imageRes)));
     end
-    #hImage = imshow(uint16(zeros(imageRes)));
+    
+    %hImage = imshow(uint16(zeros(imageRes)));
+    
     axis image
 
     edit_exptime = uicontrol(f, 'Position', [20 20 60 20], ...
@@ -39,8 +41,9 @@ function vid_impreview(hwhandle, callback_function, focusTF)
 %     edit_exptime.Position
 %     btn_grabframe.Position
     
-    
     setappdata(hImage, 'UpdatePreviewWindowFcn', callback_function);
+    setappdata(hImage, 'hwhandle', hwhandle);
+    setappdata(hImage, 'viewOps', viewOps);
     h = preview(vid, hImage);
     set(h, 'CDataMapping', 'scaled');
 
