@@ -31,12 +31,23 @@ function Video = flir_config_video(CameraName, CameraFormat, exptime)
 
 if nargin < 1 || isempty(CameraName)
     logentry('Need a CameraNumber. On Artemis, the Grasshopper3 is CameraNumber "2"');
-    CameraName = 'Grasshopper3';
+    CameraName = 'Flea3';
 end
 
 if nargin < 2 || isempty(CameraFormat)
     logentry('Need a CameraFormat. Setting to default, "F7_Raw16_1024x768_Mode2"');
-    CameraFormat = 'F7_Raw16_1024x768_Mode2';
+    switch CameraName
+        case 'Grasshopper3'
+            CameraFormat = 'F7_Raw16_1024x768_Mode2';
+        case 'Dragonfly2'
+            CameraFormat = '';
+            error('Add this default CameraFormat');
+        case 'Flea3'
+            CameraFormat = 'F7_Mono8_1280x1024_Mode0';
+        otherwise
+            error('CameraName is not recognized.');
+    end
+    
 end
 
 if nargin < 3 || isempty(exptime)
@@ -45,6 +56,8 @@ if nargin < 3 || isempty(exptime)
             exptime = 8;
         case 'Dragonfly2'
             exptime = 16;  % [ms]
+        case 'Flea3'
+            exptime = 10;
         otherwise
             error('CameraName is not recognized.');
     end
