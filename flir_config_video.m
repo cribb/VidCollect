@@ -30,8 +30,8 @@ function Video = flir_config_video(CameraName, CameraFormat, exptime)
 %}
 
 if nargin < 1 || isempty(CameraName)
-    logentry('Need a CameraNumber. On Artemis, the Grasshopper3 is CameraNumber "2"');
-    CameraName = 'Flea3';
+    logentry('Need a CameraName. On Artemis, the Grasshopper3 is CameraNumber "2"');
+    CameraName = 'Grasshopper3';
 end
 
 if nargin < 2 || isempty(CameraFormat)
