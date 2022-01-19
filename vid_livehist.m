@@ -2,22 +2,17 @@ function vid_livehist(obj,event,hImage)
 % BA_LIVEHIST is a callback function for ba_impreview.
 %
 
-% persistent ax1
-
-% class(im)
+persistent q
 
 % Display the current image frame.
-h = ancestor(hImage, 'figure');
 im = event.Data;
-
 hImage.CData = im;
-% zhand = hImage.UserData{1};
-% focusTF = hImage.UserData{2};
 
-zhand = '';
-focusTF = '';
+zhand = hImage.UserData{1};
+focusTF = hImage.UserData{2};
 
 % Pull out min and max pixel intensities so we can scale the preview image
+image_ax = ancestor(hImage, 'axes');
 cmin = min(double(hImage.CData(:)));
 cmax = max(double(hImage.CData(:)));
 
@@ -37,42 +32,27 @@ switch class(im)
         Nbins = 32768;
 end
 
-ax1 = ancestor(hImage, 'axes');
-% ax1.Units = 'normalized';
-% ax1.Position = [0.01, 0.45, 1, 0.6];
-
-
 % Select the second subplot on the figure for the histogram.
-f = ancestor(ax1, 'figure');
-ax2 = f.Children(end-1);
-% ax2.Units = 'normalized';
-% ax2.Position = [0.3, 0.05, 0.68, 0.2];
+hist_ax = subplot(2,1,2);
+set(hist_ax, 'Units', 'normalized');
+set(hist_ax, 'Position', [0.28, 0.05, 0.4, 0.17]);
 
 
 D = double(im(:));
-
-avgD = round(mean(D));
-stdD = round(std(D));
-maxD = num2str(max(D));
-minD = num2str(min(D));
-
-
-avgD = num2str(avgD, '%u');
-stdD = num2str(stdD, '%u');
-maxD = num2str(maxD, '%u');
-minD = num2str(minD, '%u');
-
+avgD = num2str(round(mean(D)), '%u');
+stdD = num2str(round(std(D)), '%u');
+maxD = num2str(num2str(max(D)), '%u');
+minD = num2str(num2str(min(D)), '%u');
 
 % assignin('base', 'focus_measure', q);
 
 % disp(['event.data.class = ' class(event.Data)]);
 
 % Plot the histogram. Choose less bins for faster update of the display.
-% axes(ax2);
-% xlim(histRange);        
-% imhist(im, Nbins);
-histogram(ax2, im(:), Nbins, 'DisplayStyle', 'stairs');
-ax2.YScale = 'log';
+xlim(histRange);        
+imhist(event.Data, Nbins);
+set(gca,'YScale','log')
+set(image_ax, 'CLim', [uint16(cmin) uint16(cmax)]);
 
 image_str = [avgD, ' \pm ', stdD, ' [', minD ', ', maxD, ']'];
 
@@ -91,13 +71,6 @@ else
 end
 
 title([image_str, focus_str, zpos_str]);
-
-
-
-set(ax1, 'CLim', [uint16(cmin) uint16(cmax)]);
-
-% set(a, 'CLim', [0 65535]);
-
 
 % Refresh the display.
 drawnow
