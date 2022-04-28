@@ -82,13 +82,15 @@ if ~sum(contains(myformats, CameraFormat))
     logentry(['CameraFormat not recognized Switching to default, which is: ' CameraFormat '.']);   
 end
 
+logentry(['CameraFormat set to: ' CameraFormat '.']);
+
 
 Video.CameraName = myCameraInfo.DeviceName;
 Video.CameraNumber = myCameraInfo.DeviceID;
 Video.ExposureMode = 'off';
 Video.FrameRateMode = 'off';
 Video.ShutterMode = 'manual';
-Video.Gain = 12;
+Video.Gain = 15;
 Video.Gamma = 1.15;
 Video.Brightness = 5.8594;
 Video.Format = CameraFormat;
