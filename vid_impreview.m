@@ -6,20 +6,40 @@ function varargout = vid_impreview(hwhandle, viewOps, callback_function)
 
     if ~isfield(viewOps, 'man_cmin'), viewOps.man_cmin = false; end
     if ~isfield(viewOps, 'man_cmax'), viewOps.man_cmax = false; end
+    if ~isfield(viewOps, 'ludl_pos'), viewOps.ludl_pos = false; end
     if ~isfield(viewOps, 'cmin'), viewOps.cmin = 0; end
     if ~isfield(viewOps, 'gain'), viewOps.gain = 12; end
 
     switch upper(ComputerName)
         case 'HILLVIDEOCOMP'
             CameraName = 'Flea3';
-            if ~isfield(viewOps, 'CameraFormat'), viewOps.CameraFormat = 'F7_Mono8_1280x1024_Mode0'; end
-            if ~isfield(viewOps, 'exptime'), viewOps.exptime = 8; end % [ms]                       
-            if ~isfield(viewOps, 'cmax'), viewOps.cmax = 255; end
+            
+            if ~isfield(viewOps, 'CameraFormat')
+                viewOps.CameraFormat = 'F7_Mono8_1280x1024_Mode0';
+            end
+            
+            if ~isfield(viewOps, 'exptime')
+                viewOps.exptime = 8; % [ms]
+            end
+            
+            if ~isfield(viewOps, 'cmax')
+                viewOps.cmax = 255; 
+            end
+            
         case 'ZINC'            
             CameraName = 'Grasshopper3';
-            if ~isfield(viewOps, 'CameraFormat'), viewOps.CameraFormat = 'F7_Raw16_1024x768_Mode2'; end
-            if ~isfield(viewOps, 'exptime'), viewOps.exptime = 16; end % [ms]                       
-            if ~isfield(viewOps, 'cmax'), viewOps.cmax = 65535; end
+            
+            if ~isfield(viewOps, 'CameraFormat')
+                viewOps.CameraFormat = 'F7_Raw16_1024x768_Mode2';
+            end
+            
+            if ~isfield(viewOps, 'exptime')
+                viewOps.exptime = 16; % [ms]
+            end
+            
+            if ~isfield(viewOps, 'cmax')
+                viewOps.cmax = 65535;
+            end
     end
     
     
@@ -64,7 +84,7 @@ function varargout = vid_impreview(hwhandle, viewOps, callback_function)
     if cmax > 2^Video.Depth-1
         cmax = 2^Video.Depth-1;
     end
-    if cmin < 0
+    if cmin > cmax || cmin < 0
         cmin = 0;
     end
     
@@ -150,7 +170,7 @@ function varargout = vid_impreview(hwhandle, viewOps, callback_function)
    end
    
     function change_exptime(source,event)
-        exptime = str2num(source.String);
+        exptime = str2double(source.String);
         fprintf('New exposure time is: %4.2g\n', exptime);       
         src.Shutter = exptime;       
         edit_exptime.String = num2str(src.Shutter);        
@@ -171,12 +191,12 @@ function varargout = vid_impreview(hwhandle, viewOps, callback_function)
         
     end
 
-    function checkbox_xmax(source, event)
+    function checkbox_cmax(source, event)
         
     end
 
     function change_cmin(source, event)
-        cmin = str2num(source.String);
+        cmin = str2double(source.String);
         fprintf('New MIN Intensity set to: %4.2g\n', cmin);              
        
         edit_cmin.String = num2str(cmin);
@@ -184,7 +204,7 @@ function varargout = vid_impreview(hwhandle, viewOps, callback_function)
     end
 
     function change_cmax(source, event)
-        cmax = str2num(source.String);
+        cmax = str2double(source.String);
         fprintf('New MAX Intensity set to: %4.2g\n', cmax);              
        
         edit_cmax.String = num2str(cmax);
