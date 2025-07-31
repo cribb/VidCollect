@@ -26,7 +26,7 @@ function varargout = vid_impreview(hwhandle, viewOps, callback_function)
                 viewOps.cmax = 255; 
             end
             
-        case 'ZINC'            
+        case {'ZINC', 'CHROMIUM', 'CERIUM'}
             CameraName = 'Grasshopper3';
             
             if ~isfield(viewOps, 'CameraFormat')
